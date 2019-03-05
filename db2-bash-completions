@@ -1,0 +1,55 @@
+# Script to auto complete Db2 commands.
+# This file should be put in the /etc/bash_completion.d
+# or simply sourced, for example in the .bash_profile.
+#
+# Author: Andres Gomez
+# Version: 20190227
+
+_db2_completion () {
+ local CUR PREV OPTS
+ COMPREPLY=()
+ CUR="${COMP_WORDS[COMP_CWORD]}"
+ PREV="${COMP_WORDS[COMP_CWORD-1]}"
+ OPTS="backup catalog create force list restore rollforward start stop uncatalog"
+
+ #Example 1
+ #if [[ ${CUR} == -* ]] ; then
+ #    COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
+ #    return 0
+ #fi
+ 
+ #Example 2
+ #case "${PREV}" in
+ # console)
+ #  local running=$(for x in `xm list --long | grep \(name | grep -v Domain-0 | awk '{ print $2 }' | tr -d \)`; do echo ${x} ; done )
+ #  COMPREPLY=( $(compgen -W "${running}" -- ${CUR}) )
+ #  return 0
+ #  ;;
+ # create)
+ #  local names=$(for x in `ls -1 /etc/xen/*.cfg`; do echo ${x/\/etc\/xen\//} ; done )
+ #  COMPREPLY=( $(compgen -W "${names}" -- ${CUR}) )
+ #  return 0
+ #  ;;
+ # *)
+ #  ;;
+ #esac
+ #COMPREPLY=($(compgen -W "${opts}" -- ${CUR}))  
+ #return 0
+ 
+ #Example 3
+ case "${PREV}" in
+  file)
+   COMPREPLY=( $(compgen -f ${CUR}) )
+   return 0
+   ;;
+  hostname)
+   COMPREPLY=( $(compgen -A hostname ${CUR}) )
+   return 0
+   ;;
+  *)
+   ;;
+ esac
+}
+
+# Associates the _db2 function to the db2 command.
+complete -F _db2_completion db2
