@@ -5,17 +5,73 @@
 # Author: Andres Gomez
 # Version: 20190227
 
-_db2_completion () {
+_db2_backup () {
  local CUR PREV OPTS
  COMPREPLY=()
- CUR="${COMP_WORDS[COMP_CWORD]}"
  PREV="${COMP_WORDS[COMP_CWORD-1]}"
- OPTS="backup catalog create force list restore rollforward start stop uncatalog"
+ CUR="${COMP_WORDS[COMP_CWORD]}"
+#echo "cur  $CUR prev $PREV"
+ if [ "${PREV}" == "backup" ] ; then
+  OPTS="database"
+  COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
+  return 0
+ elif [[ ( "${PREV}" == "database" ) || ( "${PREV}" == "db" ) ]] ; then
+  OPTS="mydb"
+  COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
+  return 0
+ fi
+}
+
+# Checks if the current command is one of the main Db2 commands.
+#
+# $1 Parameter to check
+#
+# Returns 0 if it is not a Db2 main command; 1 otherwise.
+_is_db2_main_command () {
+ local MAIN OPTS RET
+ MAIN=$1
+
+ RET=0
+ if [ ${#MAIN} -gt 3 ] ; then
+  # If the string has more that 3 characters it could be a db2 command.
+  OPTS="backup catalog create force list restore rollforward start stop uncatalog"
+  # Checks valid commands.
+  for i in ${OPTS} ; do
+   if [ "${MAIN}" == "${i}" ] ; then
+    RET=1
+    break
+   fi
+  done
+ fi
+ return ${RET}
+}
+
+_db2_completion () {
+ local CUR MAIN OPTS RET
+ COMPREPLY=()
+ CUR="${COMP_WORDS[COMP_CWORD]}"
+
+ MAIN="${COMP_WORDS[1]}"
+ _is_db2_main_command ${MAIN}
+ RET=${?}
+ if [ ${RET} -eq 0 ] ; then
+  # If it is not a valid command, then completes.
+
+  # List of all main Db2 commands.
+  OPTS="backup catalog create force list restore rollforward start stop uncatalog"
+  COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
+  return 0
+ fi
+
+ if [ "${MAIN}" == "backup" ] ; then
+  _db2_backup
+  return $?
+ fi
 
  #Example 1
  #if [[ ${CUR} == -* ]] ; then
- #    COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
- #    return 0
+ # COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
+ # return 0
  #fi
  
  #Example 2
@@ -37,18 +93,18 @@ _db2_completion () {
  #return 0
  
  #Example 3
- case "${PREV}" in
-  file)
-   COMPREPLY=( $(compgen -f ${CUR}) )
-   return 0
-   ;;
-  hostname)
-   COMPREPLY=( $(compgen -A hostname ${CUR}) )
-   return 0
-   ;;
-  *)
-   ;;
- esac
+ #case "${PREV}" in
+ # file)
+ #  COMPREPLY=( $(compgen -f ${CUR}) )
+ #  return 0
+ #  ;;
+ # hostname)
+ #  COMPREPLY=( $(compgen -A hostname ${CUR}) )
+ #  return 0
+ #  ;;
+ # *)
+ #  ;;
+ #esac
 }
 
 # Associates the _db2 function to the db2 command.
